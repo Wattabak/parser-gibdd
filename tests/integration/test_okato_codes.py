@@ -1,16 +1,18 @@
 import unittest
 
-from lib.okato_codes import req_federal_okato_codes, parse_federal_okato, country_okato_codes
+from lib.api.okato import request_all_federal_okato
+from lib.okato import all_okato_codes
+from lib.parsers import parse_federal_okato
 
 
 class TestOkatoCodes(unittest.TestCase):
     def test_federal_codes(self) -> None:
-        response = req_federal_okato_codes()
+        response = request_all_federal_okato()
         parsed = parse_federal_okato(response)
         print(parsed)
 
     def test_country_codes(self) -> None:
-        countries = country_okato_codes()
+        countries = all_okato_codes()
         print(countries)
         self.assertIs(False)
 
