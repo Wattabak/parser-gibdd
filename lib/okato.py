@@ -12,6 +12,9 @@ def get_all_federal_okato() -> List[FederalRegion]:
 
 
 def get_regions_inner_okato(region: FederalRegion) -> FederalRegion:
+    """ Получаем все окато регионов входящий в запрашиваемый федеральный
+
+    """
     unprocessed = request_inner_okato(region.okato)
     districts = parse_inner_okato(unprocessed)
     return FederalRegion(okato=region.okato,

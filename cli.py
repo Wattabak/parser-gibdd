@@ -1,10 +1,11 @@
 import json
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
-from typing import Tuple
+from typing import List
 
-import click
 import attr
+import click
+
 from lib.okato import all_okato_codes
 
 
@@ -22,7 +23,7 @@ def okato() -> None:
             f"{fed.name} муниципалитетов: {len(fed.districts)}"
             for fed in all_codes.regions
         ])
-        with open(path, "w") as raw:
+        with path.open("w") as raw:
             json.dump(attr.asdict(all_codes), raw)
     else:
         with path.open("r") as raw:
@@ -37,7 +38,7 @@ def okato() -> None:
 @main.command()
 @click.option("-y", default=datetime.now().year)
 @click.option("-r", prompt="Region name")
-def year(year: int, region: str):
+def yearly(year: int, region: str):
     """Gets info for the whole year
 
     """
@@ -45,14 +46,19 @@ def year(year: int, region: str):
 
 
 @main.command()
-@click.option("-y")
-@click.option("-m")
+@click.option("-r", prompt="Region name")
+def region(region: str):
+    pass
+
+
+@main.command()
+@click.option("-dstart", type=click.DateTime(formats=["%Y-%m"]))
+@click.option("-dend", type=click.DateTime(formats=["%Y-%m-%d"]), default=str(date.today()))
 @click.option("-R")
 @click.option("--r")
-def verbose(year: int,
-            months: Tuple[int, int],
-            fed_region: str,
-            mun_region: str):
+def verbose(date_from: date,
+            date_to: date,
+            regions: List[str]):
     pass
 
 
