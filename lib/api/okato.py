@@ -4,6 +4,8 @@ from requests import Response, post
 
 from lib.utils import latest_yearmonth
 
+logger = logging.getLogger(__name__)
+
 
 def request_all_federal_okato() -> Response:
     """Get okato codes for all federal regions
@@ -20,7 +22,7 @@ def request_all_federal_okato() -> Response:
              })
     if not r.ok:
         raise Exception(f"Unable to get the current OKATO codes, {r.content}")
-    logging.info("Successfully received current data on current OKATO codes")
+    logger.info("Successfully received current data on current OKATO codes")
     return r
 
 
@@ -41,7 +43,5 @@ def request_inner_okato(region_code: str) -> Response:
     })
     if not r.ok:
         raise Exception(f"Unable to get okato codes for a region with code {region_code}")
-    logging.info(f"Received the okato codes for a region with code {region_code}")
+    logger.info(f"Received the okato codes for a region with code {region_code}")
     return r
-
-

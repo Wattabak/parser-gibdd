@@ -1,19 +1,16 @@
 from typing import List, Optional
 
-import attr
+from pydantic import BaseModel
 
 
-@attr.s(auto_attribs=True)
-class Region:
+class Region(BaseModel):
     name: str
     okato: Optional[str] = None
 
 
-@attr.s(auto_attribs=True)
 class FederalRegion(Region):
     districts: List[Region] = []
 
 
-@attr.s(auto_attribs=True)
-class Country:
+class Country(BaseModel):
     regions: List[FederalRegion] = []

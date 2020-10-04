@@ -1,48 +1,28 @@
 import json
-from typing import List, Dict, Any
+import logging
+from typing import List
 
 import pandas as pd
 from requests import Response
 
+from models.crash import CrashDataResponse
 from models.region import Region, FederalRegion
 
+logger = logging.getLogger(__name__)
 
-def parse_crash_cards(response: Response) -> pd.DataFrame:
-    parsed = json.loads(response.json()['data'])
-    region = parsed['RegName']
-    cards = parsed['tab']
 
-    PROCESSED_CARDS = []
-    for card in cards:
+def parse_crash_cards(data: CrashDataResponse) -> pd.DataFrame:
+    """Structure the raw data in responses"""
+    parsed = []
+    for card in data.tab:
         processed_card = {}
-        info = card.pop("infoDtp") if "infoDtp" in card.keys() else {}
-        ts_info = info.pop("ts_info") if info else {}
-        uchInfo = info.pop("uchInfo") if info else []
-        processed_card.update(**card, **info)
-        PROCESSED_CARDS.append(processed_card)
 
-    df = pd.DataFrame.from_dict(*PROCESSED_CARDS)
-    return df.rename(columns={
-        "KartId": "id",
-        "rowNum": "row",
-        "DTP_V": "crash_type",
-        "POG": "deceased",
-        "RAN": "wounded",
-        "K_TS": "vehicles",
-        "K_UCH": "participants",
-        "ndu": "road_deficiency",
-        "s_pog": "weather",
-        "osv": "light_conditions",
-        "s_pch": "road_conditions",
-        "n_p": "settlement",
-        "dor": "main_road",
-        "dor_k": "road_category",
-        "dor_z": "road_significance",
-        "k_ul": "street_category",
-        "sdor": "onsite_crash_road_objects",
-        "COORD_W": "latitude",
-        "COORD_L": "longitude",
-    })
+        processed_card.update(**card.dict(exclude={'crash_info'}),
+                              **card.crash_info.dict(exclude={"vehicle_info", "participant_info"}))
+        parsed.append(processed_card)
+    logger.info(f"Region {data.region_name} successfully parsed")
+    df = pd.DataFrame.from_dict(parsed)
+    return df
 
 
 def parse_inner_okato(response: Response) -> List[Region]:
