@@ -3,7 +3,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-env_path = Path('.') / '.env'
+env_path = Path('') / '.env'
 load_dotenv(dotenv_path=env_path)
 
 loggingConfig({
@@ -32,7 +32,7 @@ loggingConfig({
         },
     },
     'loggers': {
-        'parser': {
+        'gibdd_cli': {
             'handlers': ['default', "save_file"],
             'level': 'INFO',
             'propagate': True,

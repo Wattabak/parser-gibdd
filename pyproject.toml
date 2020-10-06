@@ -2,7 +2,11 @@
 name = "parser-gibdd"
 version = "0.1.0"
 description = "Parser of gibbd data"
-authors = ["Vlad Tabakov <agoner2@gmail.com>"]
+authors = ["Vlad Tabakov <vl.tab.kov@gmail.com>"]
+readme = "README.md"
+repository = "git@github.com:Wattabak/parser-gibdd.git"
+keywords = ["data", "parser", "crashes", "gibdd"]
+packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -13,9 +17,16 @@ python-dotenv = "^0.14.0"
 pandas = "^1.1.2"
 xlrd = "^1.2.0"
 openpyxl = "^3.0.5"
+fuzzywuzzy = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
+pytest = "^6.1.1"
+setuptools = "^50.3.0"
+
+[tool.poetry.scripts]
+gibdd = "src.gibdd_cli:main"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+

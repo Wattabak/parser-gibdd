@@ -2,7 +2,7 @@ import logging
 
 from requests import Response, post
 
-from lib.utils import latest_yearmonth
+from src.api.utils import latest_yearmonth
 
 logger = logging.getLogger(__name__)
 

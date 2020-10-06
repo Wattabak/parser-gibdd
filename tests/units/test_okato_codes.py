@@ -1,8 +1,8 @@
 import unittest
 
-from lib.api.okato import request_all_federal_okato
-from lib.okato import all_okato_codes
-from lib.parsers import parse_federal_okato
+from src.api.gibdd.okato import request_all_federal_okato
+from src.api import all_okato_codes
+from src.api import parse_federal_okato
 
 
 class TestOkatoCodes(unittest.TestCase):

@@ -1,9 +1,9 @@
 import logging
-from typing import List, Optional
+from typing import List
 
-from lib.api.okato import request_all_federal_okato, request_inner_okato
-from lib.parsers import parse_federal_okato, parse_inner_okato
-from models.region import FederalRegion, Country
+from src.api.gibdd.okato import request_all_federal_okato, request_inner_okato
+from src.api.parsers import parse_federal_okato, parse_inner_okato
+from src.models.region import FederalRegion, Country
 
 
 def get_all_federal_okato() -> List[FederalRegion]:

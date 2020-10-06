@@ -5,8 +5,8 @@ from typing import List
 import pandas as pd
 from requests import Response
 
-from models.crash import CrashDataResponse
-from models.region import Region, FederalRegion
+from src.models.crash import CrashDataResponse
+from src.models.region import Region, FederalRegion
 
 logger = logging.getLogger(__name__)
 
