@@ -7,7 +7,7 @@ from src.api.gibdd.crashes import (
     subregion_crashes
 )
 from src.api.parsers import parse_crash_cards
-from src.models.crash import CrashDataResponse
+from src.models.gibdd.crash import CrashDataResponse
 
 
 class TestCrashes(unittest.TestCase):

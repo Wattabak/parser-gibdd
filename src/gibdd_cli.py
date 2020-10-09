@@ -9,7 +9,7 @@ from src.api.convert import crash_to_excel
 from src.api.gibdd.crashes import subregion_crashes
 from src.api.parsers import parse_crash_cards
 from src.api.regions import get_country_codes
-from src.models.region import FederalRegion, Country
+from src.models.gibdd.region import FederalRegion, Country
 
 logger = logging.getLogger("src.gibdd_cli")
 

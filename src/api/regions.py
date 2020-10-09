@@ -3,7 +3,7 @@ from typing import List
 
 from src.api.gibdd.okato import request_all_federal_okato, request_inner_okato
 from src.api.parsers import parse_federal_okato, parse_inner_okato
-from src.models.region import FederalRegion, Country
+from src.models.gibdd.region import FederalRegion, Country
 
 logger = logging.getLogger(__name__)
 

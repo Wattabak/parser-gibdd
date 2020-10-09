@@ -8,7 +8,7 @@ from requests.exceptions import ChunkedEncodingError
 
 from src.exceptions import ResourceUnreachable
 from src.utils import latest_yearmonth
-from src.models.okato import RegionDataResponse, RegionMapData
+from src.models.gibdd.okato import RegionDataResponse, RegionMapData
 
 import json
 logger = logging.getLogger(__name__)

@@ -7,8 +7,8 @@ from typing import Tuple, List, Iterator, Optional
 from requests import Session
 from requests.adapters import HTTPAdapter
 
-from src.models.crash import CrashDataResponse
-from src.models.region import FederalRegion, Country
+from src.models.gibdd.crash import CrashDataResponse
+from src.models.gibdd.region import FederalRegion, Country
 
 logger = logging.getLogger(__name__)
 
