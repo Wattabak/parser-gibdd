@@ -137,7 +137,7 @@ def subregion_crashes(region: int, subregion: int, period_start: date, period_en
     st_year, st_month = period_start.year, period_start.month
     end_year, end_month = period_end.year, period_end.month
 
-    logger.info(f"retrieving crashes for:\nregion: {region},\n subregion: {subregion}")
+    logger.info(f"retrieving crashes for:\nregion: {region},\nsubregion: {subregion}")
     if st_year == end_year:
         return subregion_timeframe_crashes_all_noloop(
             region, subregion, year=st_year, months=(st_month, end_month)

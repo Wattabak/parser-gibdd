@@ -1,13 +1,11 @@
-import json
 import logging
 from typing import List
 
 import pandas as pd
-from requests import Response
 
-from src.models.crash import CrashDataResponse
-from src.models.okato import RegionDataResponse, RegionMapData
-from src.models.region import Region, FederalRegion
+from src.models.gibdd.crash import CrashDataResponse
+from src.models.gibdd.okato import RegionDataResponse
+from src.models.gibdd.region import Region, FederalRegion
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +13,7 @@ logger = logging.getLogger(__name__)
 def parse_crash_cards(data: CrashDataResponse) -> pd.DataFrame:
     """Structure the raw data in responses"""
     parsed = []
-    for card in data.tab:
+    for card in data.crashes:
         processed_card = {}
 
         processed_card.update(**card.dict(exclude={'crash_info'}),

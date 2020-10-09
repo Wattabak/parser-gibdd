@@ -52,9 +52,9 @@ class CrashDataResponse(BaseModel):
     cards_amount: int = Field(..., alias="countCard")
     datename: Optional[str] = None
     end: int
-    pog: int
     pokName: str
     posl: str
-    ran: int
+    wounded: int = Field(..., alias="ran")
+    deceased: int = Field(..., alias="pog")
     start: int
-    tab: List[CrashCard] = []
+    crashes: List[CrashCard] = Field(..., alias="tab")
