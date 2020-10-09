@@ -57,4 +57,4 @@ class CrashDataResponse(BaseModel):
     posl: str
     ran: int
     start: int
-    tab: Optional[List[CrashCard]] = []
+    tab: List[CrashCard] = []

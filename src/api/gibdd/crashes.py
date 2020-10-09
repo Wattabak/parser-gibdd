@@ -56,16 +56,15 @@ def subregion_timeframe_crashes_amount(region: int,
     ).encode('utf8').decode("unicode-escape")
 
     try:
-        session = Session()
-        session.mount("http://stat.gibdd.ru/", HTTPAdapter(max_retries=5))
-        response = session.post("http://stat.gibdd.ru/map/getDTPCardData", json={"data": data})
-        response.json()
-        session.close()
+        with Session() as session:
+            session.mount("http://stat.gibdd.ru/", HTTPAdapter(max_retries=5))
+            response = session.post("http://stat.gibdd.ru/map/getDTPCardData", json={"data": data})
+            response.json()
     except JSONDecodeError:
-        logger.info("No data found with the specified options, check your inputs or continue")
+        logger.warning("No data found with the specified options, check your inputs or continue")
         raise CrashesNotFoundError
     except (ConnectionError, TimeoutError) as e:
-        logger.exception(f"unable to reach api endpoint, error: {e}")
+        logger.exception(f"Unable to reach api endpoint, error:\n{e}")
     else:
         return CrashDataResponse.parse_raw(response.json()["data"])
 

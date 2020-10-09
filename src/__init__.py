@@ -1,4 +1,4 @@
-from logging.config import dictConfig as loggingConfig
+from logging.config import dictConfig
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 env_path = Path('') / '.env'
 load_dotenv(dotenv_path=env_path)
 
-loggingConfig({
+dictConfig({
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
@@ -32,8 +32,8 @@ loggingConfig({
         },
     },
     'loggers': {
-        'gibdd_cli': {
-            'handlers': ['default', "save_file"],
+        '': {
+            'handlers': ['default'],
             'level': 'INFO',
             'propagate': True,
         },

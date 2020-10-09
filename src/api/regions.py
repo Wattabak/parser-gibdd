@@ -5,14 +5,16 @@ from src.api.gibdd.okato import request_all_federal_okato, request_inner_okato
 from src.api.parsers import parse_federal_okato, parse_inner_okato
 from src.models.region import FederalRegion, Country
 
+logger = logging.getLogger(__name__)
 
-def get_all_federal_okato() -> List[FederalRegion]:
+
+def get_federal_regions() -> List[FederalRegion]:
     unprocessed = request_all_federal_okato()
     return parse_federal_okato(unprocessed)
 
 
-def get_regions_inner_okato(region: FederalRegion) -> FederalRegion:
-    """ Получаем все окато регионов входящий в запрашиваемый федеральный
+def get_municipalities_by_federal(region: FederalRegion) -> FederalRegion:
+    """ Получаем все окато регионов входящих в запрашиваемый федеральный
 
     """
     unprocessed = request_inner_okato(region.okato)
@@ -23,16 +25,16 @@ def get_regions_inner_okato(region: FederalRegion) -> FederalRegion:
                          )
 
 
-def all_okato_codes() -> Country:
+def get_country_codes() -> Country:
     """Returns all federal regions and their subregions with okato codes"""
     all_codes = Country()
     try:
-        fed_regions = get_all_federal_okato()
+        fed_regions = get_federal_regions()
     except Exception:
         return all_codes
     for region in fed_regions:
         try:
-            full_region = get_regions_inner_okato(region)
+            full_region = get_municipalities_by_federal(region)
         except Exception as e:
             logging.exception(e)
             continue

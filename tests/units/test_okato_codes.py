@@ -1,7 +1,7 @@
 import unittest
 
 from src.api.gibdd.okato import request_all_federal_okato
-from src.api.okato import all_okato_codes
+from src.api.regions import get_country_codes
 from src.api.parsers import parse_federal_okato
 
 
@@ -12,7 +12,7 @@ class TestOkatoCodes(unittest.TestCase):
         print(parsed)
 
     def test_country_codes(self) -> None:
-        countries = all_okato_codes()
+        countries = get_country_codes()
         print(countries)
 
 

@@ -18,10 +18,12 @@ pandas = "^1.1.2"
 xlrd = "^1.2.0"
 openpyxl = "^3.0.5"
 fuzzywuzzy = "^0.18.0"
+python-Levenshtein = "^0.12.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.1"
 setuptools = "^50.3.0"
+mypy = "^0.782"
 
 [tool.poetry.scripts]
 gibdd = "src.gibdd_cli:main"

@@ -6,6 +6,7 @@ import pandas as pd
 from requests import Response
 
 from src.models.crash import CrashDataResponse
+from src.models.okato import RegionDataResponse, RegionMapData
 from src.models.region import Region, FederalRegion
 
 logger = logging.getLogger(__name__)
@@ -25,25 +26,18 @@ def parse_crash_cards(data: CrashDataResponse) -> pd.DataFrame:
     return df
 
 
-def parse_inner_okato(response: Response) -> List[Region]:
+def parse_inner_okato(response: RegionDataResponse) -> List[Region]:
     """Get a mapping of code-name for the municipalities in the particular federal region"""
-    d = response.json()
-    regions_dict = json.loads(
-        json.loads(d["metabase"])[0]["maps"]
-    )
     return [
-        Region(okato=reg['id'], name=reg['name'])
-        for reg in regions_dict
+        Region(okato=reg.id, name=reg.name)
+        for reg in response.metabase[0].maps
     ]
 
 
-def parse_federal_okato(response: Response) -> List[FederalRegion]:
+def parse_federal_okato(response: RegionDataResponse) -> List[FederalRegion]:
     """Returns the mapping region code-name"""
-    d = response.json()
-    regions_dict = json.loads(
-        json.loads(d["metabase"])[0]["maps"]
-    )
+
     return [
-        FederalRegion(okato=reg['id'], name=reg['name'])
-        for reg in regions_dict
+        FederalRegion(okato=reg.id, name=reg.name)
+        for reg in response.metabase[0].maps
     ]
