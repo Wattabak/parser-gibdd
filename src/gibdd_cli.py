@@ -52,7 +52,7 @@ def okato(filename: str, update: bool) -> None:
               help="Get crashes starting from this date")
 @click.option("-de", "--dend", "date_to",
               required=True,
-              type=click.DateTime(formats=["%Y-%m"]), default=str(date.today()),
+              type=click.DateTime(formats=["%Y-%m"]), default=date.today().strftime("%Y-%m"),
               help="Get crashes ending on this date")
 @click.option("-R", "--federal",
               required=True,
@@ -79,7 +79,7 @@ def verbose(date_from: date,
               help="Get crashes starting from this date")
 @click.option("-de", "--dend", "date_to",
               required=True,
-              type=click.DateTime(formats=["%Y-%m"]), default=str(date.today()),
+              type=click.DateTime(formats=["%Y-%m"]), default=date.today().strftime("%Y-%m"),
               help="Get crashes ending on this date")
 @click.option("-r", "--region",
               required=True,
