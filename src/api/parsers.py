@@ -1,27 +1,10 @@
 import logging
 from typing import List
 
-import pandas as pd
-
-from src.models.gibdd.crash import CrashDataResponse
 from src.models.gibdd.okato import RegionDataResponse
 from src.models.gibdd.region import Region, FederalRegion
 
 logger = logging.getLogger(__name__)
-
-
-def parse_crash_cards(data: CrashDataResponse) -> pd.DataFrame:
-    """Structure the raw data in responses"""
-    parsed = []
-    for card in data.crashes:
-        processed_card = {}
-
-        processed_card.update(**card.dict(exclude={'crash_info'}),
-                              **card.crash_info.dict(exclude={"vehicle_info", "participant_info"}))
-        parsed.append(processed_card)
-    logger.info(f"Region {data.region_name} successfully parsed")
-    df = pd.DataFrame.from_dict(parsed)
-    return df
 
 
 def parse_inner_okato(response: RegionDataResponse) -> List[Region]:

@@ -133,7 +133,6 @@ def subregion_timeframe_crashes_all_noloop(
 
 def subregion_crashes(region: int, subregion: int, period_start: date, period_end: date) -> Iterator[CrashDataResponse]:
     """Get all crashes between two given dates"""
-    assert (period_end - period_start).days > 0
     st_year, st_month = period_start.year, period_start.month
     end_year, end_month = period_end.year, period_end.month
 

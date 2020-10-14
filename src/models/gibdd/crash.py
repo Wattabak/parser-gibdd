@@ -10,12 +10,12 @@ from src.models.gibdd.vehicle import VehicleInfo
 class CrashInfo(BaseModel):
     longitude: float = Field(..., alias="COORD_L")
     latitude: float = Field(..., alias="COORD_W")
-    OBJ_DTP: List[str]
-    change_org_motion: str
+    objects_near_crash: List[str] = Field(..., alias="OBJ_DTP")
+    motion_changes: str = Field(..., alias="change_org_motion")
     main_road: str = Field(..., alias="dor")
     road_category: str = Field(..., alias="dor_k")
     road_significance: str = Field(..., alias="dor_z")
-    factor: List[str]
+    motion_affecting_factors: List[str] = Field(..., alias="factor")
     house: Optional[str] = None
     street_category: str = Field(..., alias="k_ul")
     km: str

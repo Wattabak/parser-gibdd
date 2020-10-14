@@ -7,7 +7,7 @@ import click
 
 from src.api.convert import crash_to_excel
 from src.api.gibdd.crashes import subregion_crashes
-from src.api.parsers import parse_crash_cards
+from src.api.convert import crash_data_single_dataframe
 from src.api.regions import get_country_codes
 from src.models.gibdd.region import FederalRegion, Country
 
@@ -67,7 +67,7 @@ def verbose(date_from: date,
             federal: int,
             municipal: int) -> None:
     required_crashes = subregion_crashes(federal, municipal, date_from, date_to)
-    parsed_crashes = [parse_crash_cards(crash) for crash in required_crashes]
+    parsed_crashes = [crash_data_single_dataframe(crash) for crash in required_crashes]
     for crash in parsed_crashes:
         crash_to_excel(crash)
 
