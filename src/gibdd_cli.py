@@ -2,14 +2,14 @@ import json
 import logging
 from datetime import date
 from pathlib import Path
+from typing import Optional
 
 import click
 
-from src.api.convert import crash_to_excel
-from src.api.gibdd.crashes import subregion_crashes
-from src.api.convert import crash_data_single_dataframe
+from src.api.convert import package_crashes_subregion, package_crashes_fed_region
+from src.api.gibdd.crashes import subregion_crashes, region_crashes_all
 from src.api.regions import get_country_codes
-from src.models.gibdd.region import FederalRegion, Country
+from src.models.gibdd.region import FederalRegion, Country, Region
 
 logger = logging.getLogger("src.gibdd_cli")
 
@@ -59,17 +59,30 @@ def okato(filename: str, update: bool) -> None:
               type=int,
               help="OKATO code of federal region")
 @click.option("-r", "--municipal",
-              required=True,
+              required=False,
               type=int,
               help="OKATO code of municipal region")
+@click.option("-o", "--okato", "okato_path",
+              required=False,
+              default="./cache/okato_codes_latest.json",
+              help="Name of the required region")
 def verbose(date_from: date,
             date_to: date,
             federal: int,
-            municipal: int) -> None:
+            municipal: Optional[int] = None,
+            okato_path: Optional[str] = None) -> None:
+    if not municipal:
+        path = Path(okato_path)
+        with path.open("r") as raw:
+            all_codes = Country.parse_raw(raw.read())
+        federal_region = all_codes.get_region(str(federal), federal=True)
+        if not federal_region or isinstance(federal_region, Region):
+            click.echo(f"Whoops, no federal region with okato code {federal} found")
+            return
+        region_crashes = region_crashes_all(region=federal_region, period_start=date_from, period_end=date_to)
+        package_crashes_fed_region(region_crashes, federal_region=federal_region.name)
     required_crashes = subregion_crashes(federal, municipal, date_from, date_to)
-    parsed_crashes = [crash_data_single_dataframe(crash) for crash in required_crashes]
-    for crash in parsed_crashes:
-        crash_to_excel(crash)
+    package_crashes_subregion(required_crashes)
 
 
 @main.command()
@@ -106,7 +119,9 @@ def name(ctx: click.Context, date_from: date, date_to: date, region: str, okato_
                                   show_choices=True)
     selected_region = found_regions[int(selected_index)]
     if isinstance(selected_region, FederalRegion):
-        raise NotImplementedError("currently unable to parse whole federal regions, enter municipality")
+        region_crashes = region_crashes_all(region=selected_region, period_start=date_from, period_end=date_to)
+        package_crashes_fed_region(region_crashes, federal_region=selected_region.name)
+        return
     ctx.invoke(verbose,
                date_from=date_from,
                date_to=date_to,

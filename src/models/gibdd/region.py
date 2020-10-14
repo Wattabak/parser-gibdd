@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from fuzzywuzzy import fuzz
 from pydantic import BaseModel
@@ -20,6 +20,17 @@ class Country(Region):
     regions: List[FederalRegion] = []
     name = "Российская Федерация"
     okato = "877"
+
+    def get_region(self, okato: str, federal: bool = False) -> Union[Region, FederalRegion]:
+        for region in self.regions:
+            if region.okato == okato:
+                return region
+            if federal:
+                return None
+            for subregion in region.districts:
+                if subregion.okato == okato:
+                    return subregion
+        return None
 
     def find_region(self, region_name: str) -> List[Region]:
         found_regions: List[Region] = []
