@@ -6,8 +6,9 @@ from typing import Optional
 
 import click
 
-from src.api.convert import package_crashes_subregion, package_crashes_fed_region
-from src.api.gibdd.crashes import subregion_crashes, region_crashes_all
+from src.api.convert import package_crashes_subregion, package_crashes_fed_region, package_crashes_country
+from src.api.gibdd.crashes import subregion_crashes, region_crashes_all, region_crashes_all_threading, \
+    country_crashes_all_threading
 from src.api.regions import get_country_codes
 from src.models.gibdd.region import FederalRegion, Country, Region
 
@@ -49,10 +50,12 @@ def okato(filename: str, update: bool) -> None:
 @click.option("-ds", "--dstart", "date_from",
               required=True,
               type=click.DateTime(formats=["%Y-%m"]),
+              default=date(year=2015, month=1, day=1).strftime("%Y-%m"),
               help="Get crashes starting from this date")
 @click.option("-de", "--dend", "date_to",
               required=True,
-              type=click.DateTime(formats=["%Y-%m"]), default=date.today().strftime("%Y-%m"),
+              type=click.DateTime(formats=["%Y-%m"]),
+              default=date.today().strftime("%Y-%m"),
               help="Get crashes ending on this date")
 @click.option("-R", "--federal",
               required=True,
@@ -71,6 +74,7 @@ def verbose(date_from: date,
             federal: int,
             municipal: Optional[int] = None,
             okato_path: Optional[str] = None) -> None:
+    """Get gibdd data for a given """
     if not municipal:
         path = Path(okato_path)
         with path.open("r") as raw:
@@ -89,10 +93,12 @@ def verbose(date_from: date,
 @click.option("-ds", "--dstart", "date_from",
               required=True,
               type=click.DateTime(formats=["%Y-%m"]),
+              default=date(year=2015, month=1, day=1).strftime("%Y-%m"),
               help="Get crashes starting from this date")
 @click.option("-de", "--dend", "date_to",
               required=True,
-              type=click.DateTime(formats=["%Y-%m"]), default=date.today().strftime("%Y-%m"),
+              type=click.DateTime(formats=["%Y-%m"]),
+              default=date.today().strftime("%Y-%m"),
               help="Get crashes ending on this date")
 @click.option("-r", "--region",
               required=True,
@@ -105,6 +111,7 @@ def verbose(date_from: date,
               help="Name of the required region")
 @click.pass_context
 def name(ctx: click.Context, date_from: date, date_to: date, region: str, okato_path: str) -> None:
+    """Get gibdd data by region name"""
     path = Path(okato_path)
     with path.open("r") as raw:
         all_codes = Country.parse_raw(raw.read())
@@ -119,7 +126,8 @@ def name(ctx: click.Context, date_from: date, date_to: date, region: str, okato_
                                   show_choices=True)
     selected_region = found_regions[int(selected_index)]
     if isinstance(selected_region, FederalRegion):
-        region_crashes = region_crashes_all(region=selected_region, period_start=date_from, period_end=date_to)
+        region_crashes = region_crashes_all_threading(region=selected_region, period_start=date_from,
+                                                      period_end=date_to)
         package_crashes_fed_region(region_crashes, federal_region=selected_region.name)
         return
     ctx.invoke(verbose,
@@ -127,6 +135,29 @@ def name(ctx: click.Context, date_from: date, date_to: date, region: str, okato_
                date_to=date_to,
                federal=all_codes.get_parent_region(selected_region).okato,
                municipal=selected_region.okato)
+
+
+@main.command()
+@click.option("-ds", "--dstart", "date_from",
+              required=True,
+              type=click.DateTime(formats=["%Y-%m"]),
+              default=date(year=2015, month=1, day=1).strftime("%Y-%m"),
+              help="Get crashes starting from this date")
+@click.option("-de", "--dend", "date_to",
+              required=True,
+              type=click.DateTime(formats=["%Y-%m"]),
+              default=date.today().strftime("%Y-%m"),
+              help="Get crashes ending on this date")
+@click.option("-o", "--okato", "okato_path",
+              required=False,
+              default="./cache/okato_codes_latest.json",
+              help="Name of the required region")
+def country(date_from: date, date_to: date, okato_path: str) -> None:
+    path = Path(okato_path)
+    with path.open("r") as raw:
+        all_codes = Country.parse_raw(raw.read())
+    country_results = country_crashes_all_threading(all_codes, period_start=date_from, period_end=date_to)
+    package_crashes_country(country_results)
 
 
 if __name__ == "__main__":
