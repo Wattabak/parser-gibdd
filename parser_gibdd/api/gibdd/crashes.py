@@ -1,28 +1,27 @@
+import concurrent.futures
 import logging
 from datetime import date
-from itertools import chain
-from json import dumps, JSONDecodeError
-from typing import Tuple, List, Iterator, Optional
+from functools import partial
+from json import dumps
+from json.decoder import JSONDecodeError
+from typing import Tuple, List, Dict, Union
 
 from requests import Session
 from requests.adapters import HTTPAdapter
 
-from src.models.crash import CrashDataResponse
-from src.models.region import FederalRegion, Country
+from exceptions import CrashesNotFoundError
+from models.region import FederalRegion, Country
+from parser_gibdd.models.gibdd.crash import CrashDataResponse
+from parser_gibdd.models.region import RegionName, FederalRegionName
 
 logger = logging.getLogger(__name__)
 
 
-class CrashesNotFoundError(Exception):
-    pass
-
-
-def subregion_timeframe_crashes_amount(region: int,
-                                       subregion: int,
+def subregion_timeframe_crashes_amount(region: Union[str, int],
+                                       subregion: Union[str, int],
                                        year: int,
                                        months: Tuple[int, int] = (1, 12),
-                                       cards: Tuple[int, int] = (0, 50),
-                                       ) -> CrashDataResponse:
+                                       cards: Tuple[int, int] = (0, 50)) -> CrashDataResponse:
     """Returns the required amount of crash data
 
     Parameters
@@ -32,7 +31,7 @@ def subregion_timeframe_crashes_amount(region: int,
     subregion : int
         OKATO code of the subregion to parse
     year : int
-        _
+        year to query the request to
     months: Tuple[int, int]
         range of months to request data from
     cards : Tuple[int, int]
@@ -51,28 +50,23 @@ def subregion_timeframe_crashes_amount(region: int,
         'en': str(cards[1])
     }
 
-    data = dumps(
-        data, separators=(',', ':')
-    ).encode('utf8').decode("unicode-escape")
+    data = dumps(data, separators=(',', ':')).encode('utf8').decode("unicode-escape")
 
     try:
-        session = Session()
-        session.mount("http://stat.gibdd.ru/", HTTPAdapter(max_retries=5))
-        response = session.post("http://stat.gibdd.ru/map/getDTPCardData", json={"data": data})
-        response.json()
-        session.close()
-    except JSONDecodeError:
-        logger.info("No data found with the specified options, check your inputs or continue")
-        raise CrashesNotFoundError
-    except (ConnectionError, TimeoutError) as e:
-        logger.exception(f"unable to reach api endpoint, error: {e}")
-    else:
+        with Session() as session:
+            session.mount("http://stat.gibdd.ru/", HTTPAdapter(max_retries=5))
+            response = session.post("http://stat.gibdd.ru/map/getDTPCardData", json={"data": data})
         return CrashDataResponse.parse_raw(response.json()["data"])
+    except (JSONDecodeError, ValueError):
+        logger.warning("No data found with the specified options, check your inputs or continue")
+        raise CrashesNotFoundError()
+    except (ConnectionError, TimeoutError) as e:
+        logger.exception(f"Unable to reach api endpoint, error:\n{e}")
 
 
 def subregion_timeframe_crashes_all(
-        region: int,
-        subregion: int,
+        region: Union[str, int],
+        subregion: Union[str, int],
         year: int,
         months: Tuple[int, int] = (1, 12), ) -> List[CrashDataResponse]:
     """ALL crash data in a given timeframe for a subregion"""
@@ -99,11 +93,11 @@ def subregion_timeframe_crashes_all(
 
 
 def subregion_timeframe_crashes_all_noloop(
-        region: int,
-        subregion: int,
+        region: Union[str, int],
+        subregion: Union[str, int],
         year: int,
         months: Tuple[int, int] = (1, 12),
-) -> List[Optional[CrashDataResponse]]:
+) -> List[CrashDataResponse]:
     """ALL crash data in a given timeframe for a subregion, except with two large requests
 
     There is a count of cards for a given subregion in every request,
@@ -132,13 +126,15 @@ def subregion_timeframe_crashes_all_noloop(
     return crashes
 
 
-def subregion_crashes(region: int, subregion: int, period_start: date, period_end: date) -> Iterator[CrashDataResponse]:
+def subregion_crashes(region: Union[str, int],
+                      subregion: Union[str, int],
+                      period_start: date,
+                      period_end: date) -> List[CrashDataResponse]:
     """Get all crashes between two given dates"""
-    assert (period_end - period_start).days > 0
     st_year, st_month = period_start.year, period_start.month
     end_year, end_month = period_end.year, period_end.month
 
-    logger.info(f"retrieving crashes for:\nregion: {region},\n subregion: {subregion}")
+    logger.info(f"retrieving crashes for:\nregion: {region},\nsubregion: {subregion}")
     if st_year == end_year:
         return subregion_timeframe_crashes_all_noloop(
             region, subregion, year=st_year, months=(st_month, end_month)
@@ -156,37 +152,87 @@ def subregion_crashes(region: int, subregion: int, period_start: date, period_en
         crashes_inbetween.extend(subregion_timeframe_crashes_all_noloop(
             region, subregion, year=st_year, months=(1, 12)
         ))
-    return chain(crashes_first_year, crashes_last_year, crashes_inbetween)
+    return [*crashes_first_year,
+            *crashes_last_year,
+            *crashes_inbetween]
 
 
 def region_crashes_all(region: FederalRegion,
                        period_start: date,
-                       period_end: date) -> List[CrashDataResponse]:
+                       period_end: date) -> Dict[RegionName, List[CrashDataResponse]]:
     """Get all crashes in a given federal region"""
-    crashes = []
+    crashes: Dict[RegionName, List[CrashDataResponse]] = {}
+    if not region.okato:
+        raise Exception(
+            f"No okato code for federal region: {region.name}, update the cache for federal regions"
+        )
     for subregion in region.districts:
-        crashes.extend(subregion_crashes(
-            region=int(region.okato),
-            subregion=int(subregion.okato),
+        if not subregion.okato:
+            raise Exception(
+                f"No okato code for municipal region: {subregion.name}, update the cache for federal regions"
+            )
+        crashes[subregion.name] = subregion_crashes(
+            region=region.okato,
+            subregion=subregion.okato,
             period_start=period_start,
             period_end=period_end
-        ))
+        )
     return crashes
+
+
+def region_crashes_all_threading(region: FederalRegion,
+                                 period_start: date,
+                                 period_end: date) -> Dict[RegionName, List[CrashDataResponse]]:
+    if not region.okato:
+        raise Exception(
+            f"No okato code for federal region: {region.name}, update the cache for federal regions"
+        )
+    concrete_subregion_crashes = partial(subregion_crashes, region=region.okato, period_start=period_start,
+                                         period_end=period_end)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        result = executor.map(
+            lambda x: (x.name, concrete_subregion_crashes(subregion=x.okato)), region.districts
+        )
+    return {name: crash_data for name, crash_data in result}
 
 
 def country_crashes_all(country: Country,
                         period_start: date,
-                        period_end: date) -> List[CrashDataResponse]:
+                        period_end: date) -> List[Dict[RegionName, List[CrashDataResponse]]]:
     """
     Get all crashes in Russia
 
     TODO: probably could use some optimizations, it will be at least a thousand requests
     """
-    crashes = []
+    crashes: List[Dict[RegionName, List[CrashDataResponse]]] = []
     for fed in country.regions:
-        crashes.extend(region_crashes_all(
+        crashes.append(region_crashes_all(
             region=fed,
             period_start=period_start,
             period_end=period_end
         ))
     return crashes
+
+
+country_return_type = Dict[FederalRegionName, Dict[RegionName, List[CrashDataResponse]]]
+
+
+def country_crashes_all_threading(country: Country,
+                                  period_start: date,
+                                  period_end: date
+                                  ) -> country_return_type:
+    return {
+        fed.name: region_crashes_all_threading(
+            region=fed,
+            period_start=period_start,
+            period_end=period_end
+        )
+        for fed in country.regions
+    }
+    # with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+    #     result = executor.map(
+    #         lambda x: (x.name, region_crashes_all_threading(region=x,
+    #                                                         period_start=period_start,
+    #                                                         period_end=period_end)), country.regions
+    #     )
+    # return {name: data for name, data in result}

@@ -10,13 +10,12 @@ setup(
     author="Vlad Tabakov",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(where="./src", include="src", exclude="./tests"),
+    packages=find_packages(where="./parser_gibdd", include="parser_gibdd", exclude="./tests"),
     include_package_data=True,
     install_requires=[str(ir.key) for ir in parse_requirements("requirements.txt")],
     entry_points='''
         [console_scripts]
-        gibdd=src.gibdd_cli:main
+        gibdd=parser_gibdd.cli.shell:main
     ''',
     python_requires='>=3.8',
-
 )
