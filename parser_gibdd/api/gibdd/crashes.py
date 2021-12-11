@@ -9,15 +9,12 @@ from typing import Tuple, List, Dict, Union
 from requests import Session
 from requests.adapters import HTTPAdapter
 
-from src.models.gibdd.crash import CrashDataResponse
-from src.models.gibdd.region import FederalRegion, Country
-from src.models.region import RegionName, FederalRegionName
+from exceptions import CrashesNotFoundError
+from models.region import FederalRegion, Country
+from parser_gibdd.models.gibdd.crash import CrashDataResponse
+from parser_gibdd.models.region import RegionName, FederalRegionName
 
 logger = logging.getLogger(__name__)
-
-
-class CrashesNotFoundError(Exception):
-    pass
 
 
 def subregion_timeframe_crashes_amount(region: Union[str, int],

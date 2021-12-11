@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from src.models.gibdd.participant import ParticipantInfo
-from src.models.gibdd.vehicle import VehicleInfo
+from parser_gibdd.models.gibdd.participant import ParticipantInfo
+from parser_gibdd.models.gibdd.vehicle import VehicleInfo
 
 
 class CrashInfo(BaseModel):

@@ -6,9 +6,9 @@ from requests import Request, Response, Session
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ChunkedEncodingError
 
-from src.exceptions import ResourceUnreachable
-from src.utils import latest_yearmonth
-from src.models.gibdd.okato import RegionDataResponse, RegionMapData
+from parser_gibdd.exceptions import ResourceUnreachable
+from parser_gibdd.utils import latest_yearmonth
+from parser_gibdd.models.gibdd.okato import RegionDataResponse, RegionMapData
 
 import json
 logger = logging.getLogger(__name__)

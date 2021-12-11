@@ -4,9 +4,9 @@ from typing import Optional, List, Dict, Any, Tuple
 
 from pandas import DataFrame, ExcelWriter
 
-from src.api.parsers import logger
-from src.models.gibdd.crash import CrashDataResponse
-from src.models.region import RegionName, FederalRegionName
+from parser_gibdd.api.parsers import logger
+from parser_gibdd.models.gibdd.crash import CrashDataResponse
+from parser_gibdd.models.region import RegionName, FederalRegionName
 
 
 def crash_to_excel(crash: DataFrame, filename: Optional[str] = None) -> None:

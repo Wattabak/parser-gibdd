@@ -1,13 +1,13 @@
 import unittest
 from datetime import date
 
-from src.api.gibdd.crashes import (
+from parser_gibdd.api.gibdd.crashes import (
     subregion_timeframe_crashes_amount,
     subregion_timeframe_crashes_all_noloop,
     subregion_crashes
 )
-from src.api.convert import crash_data_single_dataframe
-from src.models.gibdd.crash import CrashDataResponse
+from parser_gibdd.api.convert import crash_data_single_dataframe
+from parser_gibdd.models.gibdd.crash import CrashDataResponse
 
 
 class TestCrashes(unittest.TestCase):

@@ -6,13 +6,13 @@ from typing import Optional
 
 import click
 
-from src.api.convert import package_crashes_subregion, package_crashes_fed_region, package_crashes_country
-from src.api.gibdd.crashes import subregion_crashes, region_crashes_all, region_crashes_all_threading, \
+from parser_gibdd.api.convert import package_crashes_subregion, package_crashes_fed_region, package_crashes_country
+from parser_gibdd.api.gibdd.crashes import subregion_crashes, region_crashes_all, region_crashes_all_threading, \
     country_crashes_all_threading
-from src.api.regions import get_country_codes
-from src.models.gibdd.region import FederalRegion, Country, Region
+from parser_gibdd.api.regions import get_country_codes
+from models.region import Region, FederalRegion, Country
 
-logger = logging.getLogger("src.gibdd_cli")
+logger = logging.getLogger("parser_gibdd.gibdd_cli")
 
 
 @click.group()
@@ -112,6 +112,7 @@ def verbose(date_from: date,
 @click.pass_context
 def name(ctx: click.Context, date_from: date, date_to: date, region: str, okato_path: str) -> None:
     """Get gibdd data by region name"""
+    print(region)
     path = Path(okato_path)
     with path.open("r") as raw:
         all_codes = Country.parse_raw(raw.read())

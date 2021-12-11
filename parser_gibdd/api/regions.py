@@ -1,9 +1,9 @@
 import logging
 from typing import List
 
-from src.api.gibdd.okato import request_all_federal_okato, request_inner_okato
-from src.api.parsers import parse_federal_okato, parse_inner_okato
-from src.models.gibdd.region import FederalRegion, Country
+from parser_gibdd.api.gibdd.okato import request_all_federal_okato, request_inner_okato
+from parser_gibdd.api.parsers import parse_federal_okato, parse_inner_okato
+from models.region import FederalRegion, Country
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +14,7 @@ def get_federal_regions() -> List[FederalRegion]:
 
 
 def get_municipalities_by_federal(region: FederalRegion) -> FederalRegion:
-    """ Получаем все окато регионов входящих в запрашиваемый федеральный
-
-    """
+    """Получаем все окато регионов входящих в запрашиваемый федеральный округ"""
     unprocessed = request_inner_okato(region.okato)
     districts = parse_inner_okato(unprocessed)
     return FederalRegion(okato=region.okato,

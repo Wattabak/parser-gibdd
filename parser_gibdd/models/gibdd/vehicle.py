@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from src.models.gibdd.participant import DriverInfo
+from parser_gibdd.models.gibdd.participant import DriverInfo
 
 
 class VehicleInfo(BaseModel):
