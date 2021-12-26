@@ -6,11 +6,11 @@ from typing import Optional
 
 import click
 
+from models.region import Region, FederalRegion, Country
 from parser_gibdd.api.convert import package_crashes_subregion, package_crashes_fed_region, package_crashes_country
 from parser_gibdd.api.gibdd.crashes import subregion_crashes, region_crashes_all, region_crashes_all_threading, \
     country_crashes_all_threading
 from parser_gibdd.api.regions import get_country_codes
-from models.region import Region, FederalRegion, Country
 
 logger = logging.getLogger("parser_gibdd.gibdd_cli")
 
