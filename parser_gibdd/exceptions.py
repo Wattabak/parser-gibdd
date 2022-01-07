@@ -2,6 +2,10 @@ class ResourceUnreachable(Exception):
     pass
 
 
+class ResourceRequestFailed(Exception):
+    pass
+
+
 class ResourceReturnedEmpty(Exception):
     pass
 

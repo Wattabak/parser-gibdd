@@ -2,15 +2,16 @@ import json
 import logging
 from datetime import date
 from pathlib import Path
+from pprint import pformat
 from typing import Optional
 
 import click
 
-from parser_gibdd.api.convert import package_crashes_subregion, package_crashes_fed_region, package_crashes_country
-from parser_gibdd.api.gibdd.crashes import subregion_crashes, region_crashes_all, region_crashes_all_threading, \
+from parser_gibdd.api.crashes import subregion_crashes, region_crashes_all, region_crashes_all_threading, \
     country_crashes_all_threading
-from parser_gibdd.api.regions import get_country_codes
-from models.region import Region, FederalRegion, Country
+from parser_gibdd.convert import package_crashes_subregion, package_crashes_fed_region, package_crashes_country
+from parser_gibdd.models.region import Region, FederalRegion, Country
+from parser_gibdd.regions import get_country_codes
 
 logger = logging.getLogger("parser_gibdd.gibdd_cli")
 
@@ -21,29 +22,26 @@ def main():
 
 
 @main.command()
-@click.option("-f", "--file", "filename", required=False, default="./cache/okato_codes_latest.json")
-@click.option("-u", "--update", required=False, default=False, type=bool)
-def okato(filename: str, update: bool) -> None:
-    """Update OKATO codes cache or ensure that it exists
+@click.option("-s", "cache_path", required=False)
+def all_okato(cache_path: Optional[str]) -> Optional[Country]:
+    """Get OKATO codes for whole country
 
+    If save_path is not passed, data will just be printed in stdout
     """
-    path = Path(filename)
-    if not path.exists():
-        all_codes = get_country_codes()
-        click.echo([
-            f"{fed.name} муниципалитетов: {len(fed.districts)}"
-            for fed in all_codes.regions
-        ])
+
+    all_codes = get_country_codes()
+    click.echo([
+        f"{fed.name} муниципалитетов: {len(fed.districts)}"
+        for fed in all_codes.regions
+    ])
+    click.echo(pformat(all_codes.dict()))
+
+    if cache_path:
+        path = Path(cache_path)
+
         with path.open("w") as raw:
             json.dump(all_codes.dict(), raw)
-    else:
-        with path.open("r") as raw:
-            all_codes = json.loads(raw.read())
-        check_codes = get_country_codes()
-        if check_codes != all_codes:
-            click.echo("override codes")
-            with path.open("w") as raw:
-                json.dump(check_codes.dict(), raw)
+    return all_codes
 
 
 @main.command()
@@ -65,18 +63,18 @@ def okato(filename: str, update: bool) -> None:
               required=False,
               type=int,
               help="OKATO code of municipal region")
-@click.option("-o", "--okato", "okato_path",
+@click.option("-c", "--okato-cache-path",
               required=False,
               default="./cache/okato_codes_latest.json",
-              help="Name of the required region")
+              help="")
 def verbose(date_from: date,
             date_to: date,
             federal: int,
             municipal: Optional[int] = None,
-            okato_path: Optional[str] = None) -> None:
+            okato_cache_path: Optional[str] = None) -> None:
     """Get gibdd data for a given """
     if not municipal:
-        path = Path(okato_path)
+        path = Path(okato_cache_path)
         with path.open("r") as raw:
             all_codes = Country.parse_raw(raw.read())
         federal_region = all_codes.get_region(str(federal), federal=True)
@@ -112,7 +110,6 @@ def verbose(date_from: date,
 @click.pass_context
 def name(ctx: click.Context, date_from: date, date_to: date, region: str, okato_path: str) -> None:
     """Get gibdd data by region name"""
-    print(region)
     path = Path(okato_path)
     with path.open("r") as raw:
         all_codes = Country.parse_raw(raw.read())
@@ -127,7 +124,8 @@ def name(ctx: click.Context, date_from: date, date_to: date, region: str, okato_
                                   show_choices=True)
     selected_region = found_regions[int(selected_index)]
     if isinstance(selected_region, FederalRegion):
-        region_crashes = region_crashes_all_threading(region=selected_region, period_start=date_from,
+        region_crashes = region_crashes_all_threading(region=selected_region,
+                                                      period_start=date_from,
                                                       period_end=date_to)
         package_crashes_fed_region(region_crashes, federal_region=selected_region.name)
         return

@@ -4,7 +4,7 @@ from typing import Optional, List, Union
 from fuzzywuzzy import fuzz
 from pydantic import BaseModel
 
-from exceptions import RegionNotFoundError
+from parser_gibdd.exceptions import RegionNotFoundError
 
 logger = logging.getLogger(__name__)
 

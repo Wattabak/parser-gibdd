@@ -2,16 +2,13 @@ import concurrent.futures
 import logging
 from datetime import date
 from functools import partial
-from json import dumps
-from json.decoder import JSONDecodeError
 from typing import Tuple, List, Dict, Union
 
-from requests import Session
-from requests.adapters import HTTPAdapter
-
-from exceptions import CrashesNotFoundError
-from models.region import FederalRegion, Country
+from parser_gibdd.api.gibdd_api import GibddAPI, DtpCardDataResponseHandler
+from parser_gibdd.exceptions import CrashesNotFoundError
 from parser_gibdd.models.gibdd.crash import CrashDataResponse
+from parser_gibdd.models.gibdd.requests import GibddDTPCardData, GibddDateString, DtpCardDataOrder
+from parser_gibdd.models.region import FederalRegion, Country
 from parser_gibdd.models.region import RegionName, FederalRegionName
 
 logger = logging.getLogger(__name__)
@@ -38,30 +35,20 @@ def subregion_timeframe_crashes_amount(region: Union[str, int],
         range of cards to retrieve
     """
     first, last = months
-    data = {
-        "date": [f"MONTHS:{m}.{year}" for m in range(first, last + 1)],
-        "ParReg": str(region),
-        'order': {
-            "type": 1, "fieldName": 'dat'
-        },
-        "reg": str(subregion),
-        'ind': '1',
-        'st': str(cards[0]),
-        'en': str(cards[1])
-    }
-
-    data = dumps(data, separators=(',', ':')).encode('utf8').decode("unicode-escape")
-
-    try:
-        with Session() as session:
-            session.mount("http://stat.gibdd.ru/", HTTPAdapter(max_retries=5))
-            response = session.post("http://stat.gibdd.ru/map/getDTPCardData", json={"data": data})
-        return CrashDataResponse.parse_raw(response.json()["data"])
-    except (JSONDecodeError, ValueError):
-        logger.warning("No data found with the specified options, check your inputs or continue")
-        raise CrashesNotFoundError()
-    except (ConnectionError, TimeoutError) as e:
-        logger.exception(f"Unable to reach api endpoint, error:\n{e}")
+    request_data = GibddDTPCardData(
+        date=[GibddDateString.from_year_month(year, m) for m in range(first, last + 1)],
+        ParReg=str(region),
+        order=DtpCardDataOrder(type=1, fieldName='dat'),
+        reg=str(subregion),
+        ind='1',
+        st=str(cards[0]),
+        en=str(cards[1])
+    )
+    with GibddAPI("http://stat.gibdd.ru/") as api:
+        request = api.request_dtp_card_data(request_data)
+        response = api.send_request(request)
+        parsed_response = DtpCardDataResponseHandler(response).parse()
+    return parsed_response
 
 
 def subregion_timeframe_crashes_all(

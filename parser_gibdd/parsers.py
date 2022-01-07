@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from parser_gibdd.models.gibdd.okato import RegionDataResponse
-from models.region import Region, FederalRegion
+from parser_gibdd.models.region import Region, FederalRegion
 
 logger = logging.getLogger(__name__)
 

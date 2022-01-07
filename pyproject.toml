@@ -6,7 +6,7 @@ authors = ["Vlad Tabakov <vl.tab.kov@gmail.com>"]
 readme = "README.md"
 repository = "git@github.com:Wattabak/parser-gibdd.git"
 keywords = ["data", "parser", "crashes", "gibdd"]
-packages = [{ include = "src" }]
+packages = [{ include = "parser_gibdd" }]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -26,7 +26,7 @@ setuptools = "^50.3.0"
 mypy = "^0.782"
 
 [tool.poetry.scripts]
-gibdd = "src.cli.shell:main"
+gibdd = "parser_gibdd.cli.shell:main"
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]

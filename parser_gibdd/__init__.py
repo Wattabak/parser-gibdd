@@ -20,16 +20,6 @@ dictConfig({
             'formatter': 'standard',
             'level': 'INFO',
         },
-        'save_file': {
-            'level': 'DEBUG',
-            'formatter': 'standard',
-            'filename': 'logs/parser.log',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'when': 'D',
-            'interval': 7,
-            'backupCount': 3,
-            'utc': True,
-        },
     },
     'loggers': {
         '': {
