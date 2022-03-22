@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any, Tuple
 
 from pandas import DataFrame, ExcelWriter
 
-from parser_gibdd.api.parsers import logger
+from parser_gibdd.parsers import logger
 from parser_gibdd.models.gibdd.crash import CrashDataResponse
 from parser_gibdd.models.region import RegionName, FederalRegionName
 

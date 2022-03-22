@@ -10,7 +10,6 @@
 gibdd verbose -ds 2019-01 -de 2019-02 -R 90 -r 90401
 ```
    
-## API
 
 ## DEV
 
