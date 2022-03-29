@@ -4,7 +4,7 @@ from typing import Optional, List, Union
 from fuzzywuzzy import fuzz
 from pydantic import BaseModel
 
-from parser_gibdd.exceptions import RegionNotFoundError
+from parser_gibdd.library.exceptions import RegionNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -26,21 +26,27 @@ class FederalRegion(Region):
     districts: List[Region] = []
 
 
+def get_region(regions: List[Union[FederalRegion, Region]],
+               okato: str,
+               ) -> Union[Region, FederalRegion, None]:
+    """
+
+    @param regions: list of regions where the search will be performed
+    """
+    for region in regions:
+        if region.okato == okato:
+            return region
+        return get_region(getattr(region, 'districts', []))
+    return None
+
+
 class Country(Region):
     regions: List[FederalRegion] = []
     name = "Российская Федерация"
     okato = "877"
 
-    def get_region(self, okato: str, federal: bool = False) -> Union[Region, FederalRegion]:
-        for region in self.regions:
-            if region.okato == okato:
-                return region
-            if federal:
-                return None
-            for subregion in region.districts:
-                if subregion.okato == okato:
-                    return subregion
-        return None
+    def get_region(self, okato: str):
+        return get_region(self.regions, okato)
 
     def find_region(self, region_name: str) -> List[Region]:
         found_regions: List[Region] = []
@@ -61,3 +67,6 @@ class Country(Region):
             if region.okato in [inner.okato for inner in federal.districts]:
                 return federal
         raise RegionNotFoundError(f"Region {region.name} not found in {self.name}")
+
+
+

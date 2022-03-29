@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any, Tuple
 
 from pandas import DataFrame, ExcelWriter
 
-from parser_gibdd.parsers import logger
+from parser_gibdd.gibdd_api.parsers import logger
 from parser_gibdd.models.gibdd.crash import CrashDataResponse
 from parser_gibdd.models.region import RegionName, FederalRegionName
 
@@ -19,10 +19,10 @@ def crash_data_single_dataframe(data: CrashDataResponse) -> DataFrame:
     """Structure the raw data in responses"""
     parsed = []
     for card in data.crashes:
-        processed_card: Dict[str, Any] = {}
-
-        processed_card.update(**card.dict(exclude={'crash_info'}),
-                              **card.crash_info.dict(exclude={"vehicle_info", "participant_info"}))
+        processed_card = {
+            **card.dict(exclude={'crash_info'}),
+            **card.crash_info.dict(exclude={"vehicle_info", "participant_info"})
+        }
         parsed.append(processed_card)
     logger.info(f"Region {data.region_name} successfully parsed")
     df = DataFrame(parsed)
@@ -57,9 +57,10 @@ def crash_to_dataframes(data: CrashDataResponse) -> Tuple[DataFrame, DataFrame, 
 
 def package_crashes_subregion(crashes: List[CrashDataResponse],
                               filename: Optional[str] = None,
-                              to_archive=False) -> None:
+                              ) -> None:
     """
-
+    TODO: Oh how do I wish to rewrite all of these packaging functions so that they make more sense
+    TODO: abysmal code, but currently I dont want to fix this, however, one day it shall be made better
     """
     if not filename:
         filename = f"{crashes[0].region_name}"
@@ -75,7 +76,14 @@ def package_crashes_subregion(crashes: List[CrashDataResponse],
             archive.writestr(f"{filename}_{crash.crashes[0].date[-4:]}.xlsx", excel_memory.read())
 
 
-def package_crashes_fed_region(federal_data: Dict[str, List[CrashDataResponse]], federal_region: str):
+def package_crashes_fed_region(federal_data: Dict[str, List[CrashDataResponse]],
+                               federal_region: str,
+                               ) -> None:
+    """
+
+    TODO: Oh how do I wish to rewrite all of these packaging functions so that they make more sense
+    TODO: abysmal code, but currently I dont want to fix this, however, one day it shall be made better
+    """
     with zipfile.ZipFile(f"{federal_region}.zip", "w") as archive:
         for municipal, crashes in federal_data.items():
             for crash in crashes:
@@ -92,7 +100,12 @@ def package_crashes_fed_region(federal_data: Dict[str, List[CrashDataResponse]],
 country_return_type = Dict[FederalRegionName, Dict[RegionName, List[CrashDataResponse]]]
 
 
-def package_crashes_country(country_data: country_return_type):
+def package_crashes_country(country_data: country_return_type,) -> None:
+    """
+
+    TODO: Oh how do I wish to rewrite all of these packaging functions so that they make more sense
+    TODO: abysmal code, but currently I dont want to fix this, however, one day it shall be made better
+    """
     with zipfile.ZipFile(f"Российская Федерация.zip", "w") as archive:
         for federal_name, federal_region in country_data:
             for municipal, crashes in federal_region.items():

@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from parser_gibdd import utils
+from parser_gibdd.library import utils
 
 
 @pytest.fixture()

@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "parser-gibdd"
-version = "0.1.0"
+name = "parser_gibdd"
+version = "1.0.0"
 description = "Parser of gibbd data"
 authors = ["Vlad Tabakov <vl.tab.kov@gmail.com>"]
 readme = "README.md"
@@ -9,26 +9,27 @@ keywords = ["data", "parser", "crashes", "gibdd"]
 packages = [{ include = "parser_gibdd" }]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 click = "^7.1.2"
 pydantic = "^1.6.2"
-requests = "^2.24.0"
+requests = {extras = ["socks"], version = "^2.27.1"}
 python-dotenv = "^0.14.0"
 pandas = "^1.1.2"
 xlrd = "^1.2.0"
 openpyxl = "^3.0.5"
 fuzzywuzzy = "^0.18.0"
 Levenshtein = "^0.16.0"
+typed-ast = "^1.5.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.1"
 setuptools = "^50.3.0"
-mypy = "^0.782"
+mypy = "^0.942"
 
 [tool.poetry.scripts]
-gibdd = "parser_gibdd.cli.shell:main"
+gibdd = "parser_gibdd.interface.shell:main"
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires=["setuptools>=41", "wheel", "setuptools-git-versioning"]
+build-backend="setuptools.build_meta"
 
