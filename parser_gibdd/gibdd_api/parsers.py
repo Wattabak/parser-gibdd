@@ -16,7 +16,7 @@ def parse_inner_okato(response: RegionDataResponse) -> List[Region]:
 
 
 def parse_federal_okato(response: RegionDataResponse) -> List[FederalRegion]:
-    """Returns the mapping region code-name"""
+    """An array of top regions in the hierarchy"""
 
     return [
         FederalRegion(okato=reg.id, name=reg.name)

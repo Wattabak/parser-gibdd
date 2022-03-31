@@ -1,14 +1,15 @@
-import abc
 import json
 from json.decoder import JSONDecodeError
 from logging import getLogger
 from pprint import pformat
 
 from requests import Request, Session, Response
-from requests.adapters import HTTPAdapter
 from requests.exceptions import ChunkedEncodingError
 
-from parser_gibdd.exceptions import ResourceUnreachable, ResourceRequestFailed, CrashesNotFoundError
+from parser_gibdd import APP_SETTINGS
+from parser_gibdd.library.api import ProxyRotatingAdapter
+from parser_gibdd.library.exceptions import ResourceUnreachable, ResourceRequestFailed, CrashesNotFoundError
+from parser_gibdd.library.response_handler import ResponseHandler
 from parser_gibdd.models.gibdd.crash import CrashDataResponse
 from parser_gibdd.models.gibdd.okato import RegionDataResponse, RegionMapData
 from parser_gibdd.models.gibdd.requests import GibddMainMapData, GibddDTPCardData
@@ -16,16 +17,7 @@ from parser_gibdd.models.gibdd.requests import GibddMainMapData, GibddDTPCardDat
 logger = getLogger(__name__)
 
 
-class RequestHandler(abc.ABC):
-    def __init__(self, response: Response):
-        self.raw_response = response
-
-    @abc.abstractmethod
-    def parse(self):
-        return self.raw_response.json()
-
-
-class MapDataResponseHandler(RequestHandler):
+class MapDataResponseHandler(ResponseHandler):
 
     def parse(self) -> RegionDataResponse:
         data = self.raw_response.json()
@@ -42,17 +34,24 @@ class MapDataResponseHandler(RequestHandler):
         )
 
 
-class DtpCardDataResponseHandler(RequestHandler):
+class DtpCardDataResponseHandler(ResponseHandler):
 
     def parse(self) -> CrashDataResponse:
         try:
             data = self.raw_response.json()
-            return CrashDataResponse.parse_raw(self.raw_response.json()["data"])
+            return CrashDataResponse.parse_raw(data["data"])
         except (JSONDecodeError, ValueError):
             raise CrashesNotFoundError()
 
 
 class GibddAPI:
+    _adapter = ProxyRotatingAdapter(
+        max_retries=APP_SETTINGS['SESSION_MAX_RETRIES'],
+        available_proxies=APP_SETTINGS['PROXY_SETTINGS']['PROXY_LIST'],
+    )
+    # adapter needs to be a class variable so that the information about what proxies
+    # are unavailable is not lost in between the API calls
+
     def __init__(self, host: str):
         self.host = host
         self.session = self.__create_session()
@@ -60,7 +59,7 @@ class GibddAPI:
     def __create_session(self) -> Session:
         """Apply a custom adapter to handle retries"""
         s = Session()
-        s.mount(self.host, HTTPAdapter(max_retries=5))
+        s.mount(self.host, self._adapter)
         return s
 
     def __enter__(self):
@@ -86,17 +85,18 @@ class GibddAPI:
             json=request_data.to_request_form(),
         )
 
-    def send_request(self, request: Request) -> Response:
+    def send_request(self, request: Request, ) -> Response:
         try:
             request = self.session.prepare_request(request)
             response = self.session.send(request)
-        except (ConnectionError, TimeoutError, ChunkedEncodingError) as e:
+        except (ConnectionError, TimeoutError) as e:
+            raise ResourceUnreachable(f"Unable to reach the requested resource, exception:\n {e}")
+        except ChunkedEncodingError as e:
             raise ResourceUnreachable(f"Unable to reach the requested resource, exception:\n {e}")
         if not response.ok:
             raise ResourceRequestFailed(
                 f"Request failed with status code {response.status_code}:\n"
                 f"Response: {pformat(response.content)}"
             )
-        logger.info('Request successful')
-
+        logger.info(f'Request {request.__repr__()} sent, got response {response.status_code}')
         return response
