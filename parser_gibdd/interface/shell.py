@@ -76,7 +76,7 @@ def verbose(date_from: date,
             municipal: Optional[int] = None,
             okato_cache_path: Optional[Path] = None, ) -> None:
     """Get gibdd data for given set of options"""
-    okato_cache_path = Path(okato_cache_path)
+    okato_cache_path = Path(okato_cache_path) if okato_cache_path else None
     all_codes = CrashesRussiaDeclarativeInterface.get_okato_codes(
         local_path=okato_cache_path
     )
@@ -125,7 +125,7 @@ def name(ctx: click.Context,
          okato_cache_path: Path) -> None:
     """Get gibdd data by region name
     """
-    okato_cache_path = Path(okato_cache_path)
+    okato_cache_path = Path(okato_cache_path).absolute()
     all_codes = CrashesRussiaDeclarativeInterface.get_okato_codes(
         local_path=okato_cache_path
     )

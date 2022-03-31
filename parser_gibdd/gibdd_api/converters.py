@@ -1,18 +1,76 @@
 import zipfile
 from io import BytesIO
-from typing import Optional, List, Dict, Any, Tuple
+from pathlib import Path
+from typing import Optional, List, Dict, Tuple
 
 from pandas import DataFrame, ExcelWriter
+from tablib import Dataset, Databook
 
 from parser_gibdd.gibdd_api.parsers import logger
+from parser_gibdd.models.crashes import Crash
 from parser_gibdd.models.gibdd.crash import CrashDataResponse
+from parser_gibdd.models.participants import Participant, ParticipantType
 from parser_gibdd.models.region import RegionName, FederalRegionName
+from parser_gibdd.models.vehicles import Vehicle
 
 
 def crash_to_excel(crash: DataFrame, filename: Optional[str] = None) -> None:
     if not filename:
         filename = f'{crash["region_name"][0]}'
     crash.to_excel(f"{filename}.xlsx")
+
+
+def normalize_crash_data(
+        responses: List[CrashDataResponse],
+) -> Tuple[List[Crash], List[Participant], List[Vehicle]]:
+    crashes, vehicles, participants = [] * 3
+    for response in responses:
+        for crash in response.crashes:
+            normalized_crash = Crash(
+                region_name=response.region_name,
+                **crash.dict(by_alias=False, exclude={'crash_info'}),
+                **crash.crash_info.dict(by_alias=False,
+                                        exclude={'vehicle_info', 'participant_info'})
+            )
+            for vehicle in crash.crash_info.vehicle_info:
+
+                normalized_vehicle = Vehicle(
+                    **vehicle.dict(by_alias=False, exclude={'drivers_info'})
+                )
+                for driver in vehicle.drivers_info:
+                    driver = Participant(
+                        participant_type=ParticipantType.DRIVER,
+                        **driver.dict(by_alias=False)
+                    )
+                    participants.append(driver)
+                    normalized_vehicle.drivers.append(driver.id)
+                normalized_crash.vehicles.append(normalized_vehicle.id)
+                vehicles.append(normalized_vehicle)
+            for participant in crash.crash_info.participant_info:
+                normalized_participant = Participant(
+                    participant_type=ParticipantType.PASSENGER,
+                    **participant.dict(by_alias=False)
+                )
+                normalized_crash.participants.append(normalized_participant.id)
+                participants.append(normalized_participant)
+    return crashes, participants, vehicles
+
+
+def export_to_excel(crashes: List[Crash],
+                    participants: List[Participant],
+                    vehicles: [List[Vehicle]],
+                    save_path: Optional[Path]):
+    databook = Databook(
+        sets=[
+            Dataset(title='crashes').load(*crashes),
+            Dataset(title='vehicles').load(*vehicles),
+            Dataset(title='participants').load(*participants),
+
+        ]
+    )
+    writer = databook.export('xlsx')
+    if save_path and save_path.exists():
+        writer.save()
 
 
 def crash_data_single_dataframe(data: CrashDataResponse) -> DataFrame:
@@ -100,7 +158,7 @@ def package_crashes_fed_region(federal_data: Dict[str, List[CrashDataResponse]],
 country_return_type = Dict[FederalRegionName, Dict[RegionName, List[CrashDataResponse]]]
 
 
-def package_crashes_country(country_data: country_return_type,) -> None:
+def package_crashes_country(country_data: country_return_type, ) -> None:
     """
 
     TODO: Oh how do I wish to rewrite all of these packaging functions so that they make more sense
